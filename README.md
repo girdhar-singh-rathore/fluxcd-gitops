@@ -211,7 +211,7 @@ http://localhost:30040/
 flux create source bucket 4-demo-source-minio-s3-bucket-bx-game-app \
     --bucket-name=bx-game-app \
     --secret-ref=minio-secret \
-    --endpoint=http://minio.minio-dev.svc.cluster.local:9000 \
+    --endpoint=minio.minio-dev.svc.cluster.local:9000 \
     --provider=generic \
     --insecure=true \
     --export > 4-demo-source-minio-s3-bucket-bx-game-app.yaml
