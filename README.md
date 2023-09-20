@@ -85,6 +85,9 @@ flux reconcile source git flux-system
 #Type: kustomization
 #Name: flux-system
 flux reconcile kustomization flux-system
+
+#to access the application
+http://localhost:30001/
 ```
 
 
@@ -138,6 +141,9 @@ flux create kustomization 2-demo-kustomization-bx-game-app \
 #apply the kustomization
 flux get sources git
 flux get kustomizations
+
+#to access the application
+http://localhost:30002/
 ```
 
 ### kustomize-controller with kustomize overlay
@@ -172,4 +178,56 @@ flux create kustomization 3-demo-kustomization-bx-game-app \
   --target-namespace=3-demo \
   --export > 3-demo-kustomization-bx-game-app.yaml
 
+flux get source git
+flux get kustomizations
+
+http://localhost:30003/
+```
+
+### source controller - s3 bucket
+
+
+
+```shell
+#go to repo of bx-game-app
+#git checkout 4-demo
+git checkout 4-demo
+
+#we are going to create bucket via 3rd party tool called minio
+kubectl apply -f ./minio/*
+
+kubectl get all -n minio-dev
+#NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+#service/minio   NodePort   10.105.19.146   <none>        9090:30040/TCP,9000:30041/TCP   75s
+
+#to access the minio
+http://localhost:30040/
+#credentials are minioadmin/minioadmin
+
+#create bucket on minio portal with name bx-game-app and create path with name app-78
+#upload the manifest files to app-78 folder
+
+# create source
+flux create source bucket 4-demo-source-minio-s3-bucket-bx-game-app \
+    --bucket-name=bx-game-app \
+    --secret-ref=minio-secret \
+    --endpoint=http://minio.minio-dev.svc.cluster.local:9000 \
+    --provider=generic \
+    --insecure=true \
+    --export > 4-demo-source-minio-s3-bucket-bx-game-app.yaml
+
+# create kustomization
+flux create kustomization 4-demo-kustomization-minio-s3-bucket-bx-game-app \
+  --source=Bucket/4-demo-source-minio-s3-bucket-bx-game-app \
+  --path="app-78" \
+  --prune=true \
+  --target-namespace=4-demo \
+  --export > 4-demo-kustomization-minio-s3-bucket-bx-game-app.yaml
+  
+
+# create secrets for minio with name minio-secret
+kubectl create secret -n flux-system generic minio-secret \
+    --from-literal=accesskey=minioadmin \
+    --from-literal=secretkey=minioadmin
+    
 ```
