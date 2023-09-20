@@ -137,4 +137,39 @@ flux create kustomization 2-demo-kustomization-bx-game-app \
 #push the above yaml file to git repo
 #apply the kustomization
 flux get sources git
+flux get kustomizations
+```
+
+### kustomize-controller with kustomize overlay
+
+overlay is a folder which contains the kustomization.yaml file
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployment.yml
+- service.yml
+- namespace.yml
+```
+
+```shell
+#create source and kustomization to fetch from 3-demo branch
+#go to repo of bx-game-app
+#git checkout 3-demo
+flux create source git 3-demo-source-git-bx-game-app \
+  --url=https://github.com/girdhar-singh-rathore/dx-game-app \
+    --branch=3-demo \
+    --timeout=10s \
+    --export > 3-demo-source-git-bx-game-app.yaml
+
+# create kustomization
+flux create kustomization 3-demo-kustomization-bx-game-app \
+  --source=3-demo-source-git-bx-game-app \
+  --path="manifests" \
+  --prune=true \
+  --interval=10s \
+  --target-namespace=3-demo \
+  --export > 3-demo-kustomization-bx-game-app.yaml
+
 ```
