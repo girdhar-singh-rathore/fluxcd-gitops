@@ -260,4 +260,43 @@ flux create helmrelease 5-demo-helmrelease-bx-game-app \
   --target-namespace=5-demo \
   --values=5-demo-values.yaml \
   --export > 5-demo-helmrelease-bx-game-app.yaml
+  
+#verify the helmrelease
+flux get helmrelease
+flux get sources git
+kubectl get ns
+kubectl get all -n 5-demo
+flux get sources all
+  
+#to access the application
+http://localhost:30005/
+```
+
+
+### helm controller with helm repo as source
+
+```shell
+# create source to fetch the helm chart from helm repo
+flux create source helm 6-demo-source-helm-repo-bx-game-app \
+  --url=https://github.com/sidd-harth/block-buster-helm-app \
+  --timeout=10s \
+  --export > 6-demo-source-helm-repo-bx-game-app.yaml
+  
+  
+# create helmrelease
+flux create helmrelease 6-demo-helmrelease-bx-game-app \
+  --source=HelmRepository/6-demo-source-helm-repo-bx-game-app \
+  --chart=block-buster-helm-app \
+  --interval=10s \
+  --target-namespace=6-demo \
+  --values=6-demo-values.yaml \
+  --export > 6-demo-helmrelease-bx-game-app.yaml
+```
+
+
+```shell
+#go to repo of bx-game-app
+#git checkout 6-demo
+#we have the helm chart in the repo
+
 ```
