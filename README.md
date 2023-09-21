@@ -392,9 +392,47 @@ flux create kustomization 7-demo-infra-kustomization-oci-dx-game-app-770 \
   --timeout=2m \
   --export > 7-demo-infra-kustomization-oci-dx-game-app-770.yaml
 
-#verify the kustomization and check if there is any error
+#IMP NOTE: verify the kustomization and check if there is any error
 k -n flux-system get kustomizations
 # debug specific kustomization
 k -n flux-system get kustomizations 7-demo-infra-kustomization-oci-dx-game-app-770 -o yaml
- 
+
+#reconcile the kustomization
+flux reconcile kustomization 7-demo-infra-kustomization-oci-dx-game-app-770
+
+flux reconcile source git flux-system
+
+kubectl get all -n 7-demo
+```
+
+## image automation controller
+
+https://fluxcd.io/flux/components/image/
+
+install image automation controller
+
+```shell
+
+#check the flux configuraion
+kubectl -n flux-system get deploy
+
+#image automation controller is not installed by default, we need to install it
+#let use bootstrap command to update the flux configuration, and install the image automation controller
+
+flux bootstrap github \
+  --owner=girdhar-singh-rathore \
+  --repository=fluxcd-gitops \
+  --branch=main \
+  --path=clusters/dev \
+  --personal=true \
+  --private=false \
+  --components-extra=image-reflector-controller,image-automation-controller
+
+#verify the image automation controller
+kubectl -n flux-system get deploy
+
+flux install \
+  --components-extra=image-reflector-controller,image-automation-controller \
+  --export > ./image-automation-components.yaml
+
 ```
