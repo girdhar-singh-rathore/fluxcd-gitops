@@ -291,12 +291,70 @@ flux create helmrelease 6-demo-helmrelease-bx-game-app \
   --target-namespace=6-demo \
   --values=6-demo-values.yaml \
   --export > 6-demo-helmrelease-bx-game-app.yaml
+  
+#verify the helmrelease
+flux get helmrelease
+flux get sources helm
 ```
 
 
+### OCI artifact 
+
+https://opencontainers.org/
+
+### push kubernetes manifest to OCI registry
+
 ```shell
 #go to repo of bx-game-app
-#git checkout 6-demo
-#we have the helm chart in the repo
+git checkout 7-demo
+cd 7.7.0
+#login to ghcr.io
+docker login ghcr.io -u girdhar-singh-rathore
+
+#create oci artifact and publish it to ghcr.io
+flux push artifact oci://ghcr.io/girdhar-singh-rathore/dx-game-app:7.7.0-$(git rev-parse --short HEAD) \
+  --path=manifests \
+  --source="$(git config --get remote.origin.url)" \
+  --revision="7.7.0/$(git rev-parse --short HEAD)"
+ 
+```
+
+### push helm chart to OCI registry
+
+```shell
+#go to repo of bx-game-app
+git checkout 7-demo
+cd 7.7.1
+helm package ./helm-chart
+
+#login to ghcr.io helm registry
+helm registry login ghcr.io -u girdhar-singh-rathore
+#push the helm chart to ghcr.io helm registry
+helm push block-buster-helm-app-7.7.1.tgz oci://ghcr.io/girdhar-singh-rathore/dx-game-app
+
+```
+
+### setting up the mysql database
+
+```shell
+#go to repo of bx-game-app
+git checkout infrastructure
+#explore the database folder
+
+#create source countroller for infra repo
+flux create source git infra-source-git \
+  --url=https://github.com/girdhar-singh-rathore/dx-game-app \
+    --branch=infrastructure \
+    --timeout=10s \
+    --export > infra-source-git.yaml
+    
+#create kustomization for infra repo, which will only deploy the database folder
+flux create kustomization infra-database-kustomization-git-mysql \
+  --source=GitRepository/infra-source-git \
+  --path="database" \
+  --prune=true \
+  --interval=10s \
+  --target-namespace=database \
+  --export > infra-database-kustomization-git-mysql.yaml
 
 ```
