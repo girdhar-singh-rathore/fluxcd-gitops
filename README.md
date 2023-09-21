@@ -466,7 +466,8 @@ flux create kustomization 8-demo-kustomization-git-bx-game-app \
   --path="manifests" \
   --export > 8-demo-kustomization-git-bx-game-app.yaml
 
+#verify the kustomization
+flux get kustomizations
+flux get sources git
 
-  --target-namespace=8-demo \
-  --export > 8-demo-kustomization-git-bx-game-app.yaml
 ```
