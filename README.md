@@ -431,8 +431,42 @@ flux bootstrap github \
 #verify the image automation controller
 kubectl -n flux-system get deploy
 
-flux install \
-  --components-extra=image-reflector-controller,image-automation-controller \
-  --export > ./image-automation-components.yaml
+#initialize the dockerhub 
+#go to repo of bx-game-app
+git checkout 8-demo
+cd 8.8.0
+#login to dockerhub
+docker logout 
+docker login
 
+#pull the docker image
+docker pull siddharth67/block-buster-dev:7.8.0
+
+#tag the docker image
+docker tag siddharth67/block-buster-dev:7.8.0 rathore78/dx-game-app:7.8.0
+
+#push the docker image
+docker push rathore78/dx-game-app:7.8.0
+
+#replace the image in deployment.yml file of bx-game-app
+
+#create source controller
+flux create source git 8-demo-source-git-bx-game-app \
+  --url=https://github.com/girdhar-singh-rathore/dx-game-app \
+  --branch=8-demo \
+  --timeout=10s \
+  --export > 8-demo-source-git-bx-game-app.yaml  
+  
+#create kustomization
+flux create kustomization 8-demo-kustomization-git-bx-game-app \
+  --source=GitRepository/8-demo-source-git-bx-game-app \
+  --prune=true \
+  --interval=10s \
+  --target-namespace=8-demo \
+  --path="manifests" \
+  --export > 8-demo-kustomization-git-bx-game-app.yaml
+
+
+  --target-namespace=8-demo \
+  --export > 8-demo-kustomization-git-bx-game-app.yaml
 ```
