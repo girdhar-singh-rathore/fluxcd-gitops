@@ -357,4 +357,39 @@ flux create kustomization infra-database-kustomization-git-mysql \
   --target-namespace=database \
   --export > infra-database-kustomization-git-mysql.yaml
 
+#verify the kustomization
+flux get kustomizations
+flux get sources git
+```
+
+### pull and deploy from OCI registry
+
+```shell
+# to pull the oci artifact from ghcr.io, you must know the name and tag of the artifact
+# create source controller for oci artifact
+flux create source oci 7-demo-infra-source-oci-dx-game-app-770 \
+  --url=oci://ghcr.io/girdhar-singh-rathore/dx-game-app \
+  --tag=7.7.0-14e35a5 \
+  --secret-ref=ghcr-secret \
+  --provider=generic \
+  --export > 7-demo-infra-source-oci-dx-game-app-770.yaml
+
+#create secret for ghcr.io
+flux create secret oci ghcr-secret \
+  --url=ghcr.io \
+  --username=girdhar-singh-rathore \
+  --password=<token> 
+  
+# create kustomization for oci artifact
+
+flux create kustomization 7-demo-infra-kustomization-oci-dx-game-app-770 \
+  --source=OciRepository/7-demo-infra-source-oci-dx-game-app-770 \
+  --target-namespace=7-demo \
+  --interval=10s \
+  --prune=false \
+  --health-check="Deployment/block-buster-deployment770-demo.7-demo" \
+  --depends-on="infra-database-kustomization-git-mysql" \
+  --timeout=2m \
+  --export > 7-demo-infra-kustomization-oci-dx-game-app-770.yaml
+  
 ```
