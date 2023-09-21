@@ -1,0 +1,14 @@
+---
+replicaCount: 2
+
+service:
+  type: NodePort
+  nodePort: 30005
+
+namespace: 5-demo
+
+labels:
+  app:
+    name: bx-game-app
+    version: 7.5.0
+    env: dev

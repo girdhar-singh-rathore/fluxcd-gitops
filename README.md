@@ -229,5 +229,35 @@ flux create kustomization 4-demo-kustomization-minio-s3-bucket-bx-game-app \
 kubectl create secret -n flux-system generic minio-secret \
     --from-literal=accesskey=minioadmin \
     --from-literal=secretkey=minioadmin
-    
+
+#acess the application
+#check the nodeport
+kubectl get all -n 4-demo
+
+http://localhost:30275/
+```
+
+### helm controller with git as source
+
+```shell
+#go to repo of bx-game-app
+#git checkout 5-demo
+#we have the helm chart in the repo
+
+# create source to fetch the helm chart from git repo
+flux create source git 5-demo-source-helm-git-bx-game-app \
+  --url=https://github.com/girdhar-singh-rathore/dx-game-app \
+  --branch=5-demo \
+  --timeout=10s \
+  --export > 5-demo-source-helm-git-bx-game-app.yaml
+
+#we can not use the kustomization to deploy the helm chart, we need to use helmrelease
+
+# create helmrelease
+flux create helmrelease 5-demo-helmrelease-bx-game-app \
+  --source=GitRepository/5-demo-source-helm-git-bx-game-app \
+  --chart=./helm-chart \
+  --target-namespace=5-demo \
+  --values=5-demo-values.yaml \
+  --export > 5-demo-helmrelease-bx-game-app.yaml
 ```
