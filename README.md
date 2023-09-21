@@ -391,5 +391,7 @@ flux create kustomization 7-demo-infra-kustomization-oci-dx-game-app-770 \
   --depends-on="infra-database-kustomization-git-mysql" \
   --timeout=2m \
   --export > 7-demo-infra-kustomization-oci-dx-game-app-770.yaml
-  
+
+#verify the kustomization
+k -n flux-system get kustomizations
 ```
