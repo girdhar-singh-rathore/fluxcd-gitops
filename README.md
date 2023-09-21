@@ -469,5 +469,14 @@ flux create kustomization 8-demo-kustomization-git-bx-game-app \
 #verify the kustomization
 flux get kustomizations
 flux get sources git
+kubectl -n 8-demo get all
 
 ```
+
+### image automation controller 
+
+```shell
+flux create image repository 8-demo-image-repository-bx-game-app \
+  --image=docker.io/rathore78/dx-game-app \
+  --interval=10s \
+  --export > 8-demo-image-repository-bx-game-app.yaml
