@@ -392,6 +392,9 @@ flux create kustomization 7-demo-infra-kustomization-oci-dx-game-app-770 \
   --timeout=2m \
   --export > 7-demo-infra-kustomization-oci-dx-game-app-770.yaml
 
-#verify the kustomization
+#verify the kustomization and check if there is any error
 k -n flux-system get kustomizations
+# debug specific kustomization
+k -n flux-system get kustomizations 7-demo-infra-kustomization-oci-dx-game-app-770 -o yaml
+ 
 ```
