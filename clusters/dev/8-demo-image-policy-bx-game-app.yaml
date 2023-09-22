@@ -1,0 +1,12 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: 8-demo-image-policy-bx-game-app
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: 8-demo-image-repository-bx-game-app
+  policy:
+    semver:
+      range: 7.8.x

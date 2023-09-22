@@ -480,3 +480,38 @@ flux create image repository 8-demo-image-repository-bx-game-app \
   --image=docker.io/rathore78/dx-game-app \
   --interval=10s \
   --export > 8-demo-image-repository-bx-game-app.yaml
+
+#reconcile the image repository
+flux reconcile source git flux-system
+#verify the image repository
+flux get image repository
+
+#to use automation controller to pick the latest image, we need to create new image and tag it with latest
+# go to repo of bx-game-app
+# git checkout 8-demo, modify the background color
+# don't push the changes, we will create the new image and tag it with latest
+docker build -t rathore78/dx-game-app:7.8.1 .
+
+#push the new image
+docker push rathore78/dx-game-app:7.8.1
+
+#reconcile the image repository will automatically pick the latest image
+flux get image repository
+# we can see it found two tags 
+# 7.8.0 and 7.8.1
+k -n flux-system get imagerepositories 
+k -n flux-system get imagerepositories 8-demo-image-repository-bx-game-app -o yaml
+
+#  lastScanResult:
+#    latestTags:
+#    - 7.8.1
+#    - 7.8.0
+
+#image automation controller will automatically update the deployment with latest image with image policy
+
+#create image policy
+flux create image policy 8-demo-image-policy-bx-game-app \
+  --image-ref=8-demo-image-repository-bx-game-app \
+  --select-semver="7.8.x" \
+  --export > 8-demo-image-policy-bx-game-app.yaml
+```
