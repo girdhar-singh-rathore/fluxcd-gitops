@@ -8,4 +8,6 @@ spec:
   interval: 1m0s
   ref:
     branch: 8-demo
-  url: https://github.com/girdhar-singh-rathore/dx-game-app
+  secretRef:
+    name: 8-demo-git-dx-game-app-auth
+  url: ssh://git@github.com/girdhar-singh-rathore/dx-game-app.git

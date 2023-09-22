@@ -546,5 +546,40 @@ flux create image update 8-demo-image-update-bx-game-app \
   --push-branch=8-demo \
   --interval=10s \
   --export > 8-demo-image-update-automation-bx-game-app.yaml
+  
+#reconcile 
+flux reconcile source git flux-system
 
+#verify the image update
+flux get image all 
+
+#NAME                                                    LAST RUN                        SUSPENDED       READY   MESSAGE         
+#imageupdateautomation/8-demo-image-update-bx-game-app   2023-09-22T09:24:52+02:00       False           True    no updates made 
+
+# no updates made 
+# because in manifest we need to mention which deployment we want to update
+#add the marker in deployment.yml file
+# image: rathore78/dx-game-app:7.8.0 # {"$imagepolicy": "flux-system:8-demo-image-policy-bx-game-app"}
+
+# now it will fail for authentication issue
+
+#flux does not have permissions to push the dx-game-app git repo
+
+#go you the git repo and add deploy key to the repo, settings -> deploy keys -> add deploy key
+
+#first create key from flux cli
+flux create secret git 8-demo-git-dx-game-app-auth \
+  --url=ssh://git@github.com/girdhar-singh-rathore/dx-game-app.git \
+  --ssh-key-algorithm=ecdsa \
+  --ssh-ecdsa-curve=p521 
+  
+#update the git source with above secret
+
+flux create source git 8-demo-source-git-bx-game-app \
+  --url=ssh://git@github.com/girdhar-singh-rathore/dx-game-app.git \
+  --branch=8-demo \
+  --timeout=10s \
+  --secret-ref=8-demo-git-dx-game-app-auth \
+  --export > 8-demo-source-git-bx-game-app.yaml 
+  
 ```
