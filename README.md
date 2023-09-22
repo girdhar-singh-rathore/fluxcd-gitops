@@ -600,5 +600,137 @@ flux create kustomization infra-security-kustomize-git-sealed-secrets \
   --path=bitnami-sealed-secrets \
   --export > infra-security-kustomize-git-sealed-secrets.yaml
   
+ 
+#reconcile the source
+flux reconcile source git flux-system
+
+#verify the sealed secrets
+k -n kube-system get all
+k -n kube-system get secret -l sealedsecrets.bitnami.com/sealed-secrets-key
+
+#encrypt the secret using kubeseal cli
+#install kubeseal cli
+brew install kubeseal
+kubeseal --version
+
+#in order to encrypt the secret, we need to have the public key certificate
+
+#fetch the public key certificate from sealed secret 
+k -n kube-system get secret sealed-secrets-keyhfnzz -o yaml
+
+# or we can use the kubeseal cli to fetch the public key certificate
+kubeseal --fetch-cert \
+  --controller-name=sealed-secrets-controller \
+  --controller-namespace=kube-system \
+    > sealed-secrets.pub
+
+```
+
+### encrypt and decrypt the secret using bitnami sealed secrets
+
+```shell
+k -n database get po,secrets
+k -n database delete secrets secret-mysql
+
+#but reconcile the kustomization will recreate the secret
+
+#in order to delete fisrt suspend the reconciliation
+flux suspend kustomization infra-database-kustomization-git-mysql
+
+#check the status of suspended reconciliation
+flux get kustomizations
+
+#now delete the secret
+k -n database delete secrets secret-mysql
+
+#restart the deployment
+k -n database rollout restart deployment/mysql
+
+#check the status of deployment, it will be in pending state because secret is not created
+k -n database get po
+
+#go to repo of bx-game-app
+#now encrypt the secret using kubeseal cli
+kubeseal -o yaml --scope cluster-wide --cert ../../sealed-secrets.pub < secret-mysql.yaml > sealed-secret-mysql.yamlkubeseal -o yaml --scope cluster-wide --cert ../sealed-secrets.pub < secret-mysql.yaml > sealed-secret-mysql.yaml
+
+#reconcile the source
+flux reconcile source git flux-system
+
+#resume the kustomization reconciliation
+flux resume kustomization infra-database-kustomization-git-mysql
+
+#verify the secret is created
+k -n database get secrets
+
+#get secret 
+k -n database get secret secret-mysql -o json | jq -r .data.password -r
+#decode the secret
+k -n database get secret secret-mysql -o json | jq -r .data.password -r | base64 -d
+```
+
+
+## mozilla sops - screts opertaions with PGP (pretty good privacy), GPG (GNU privacy guard) ADMIN
+PGP and GPG are data encryption and decryption program, used for transfering data securely
+
+```shell
+
+#generate the pgp key or gpg key with no passphrase
+berw install gpg
+
+gpg --batch --full-generate-key <<EOF
+%no-protection
+Key-Type: 1
+Key-Length: 3072
+Subkey-Type: 1
+Subkey-Length: 3072
+Expire-Date: 0
+Name-Real: dev.us.e1.k8s
+Name-Email: admin@bb.com
+EOF
+
+#access the public key
+gpg --list-public-keys 
+
+#access the private key
+gpg --list-secret-keys
+
+#export the private key and store in git repo, public key can be used to encrypt the secret
+gpg --export-secret-keys --armor 
+
+gpg --export-secret-keys --armor > sops-gpg.key
+
+#export public key
+gpg --export --armor > sops-gpg.pub
+
+#create kubernetes secret with private key
+kubectl -n flux-system create secret generic sops-gpg \
+  --from-file=sops-gpg.key
   
+# delete all keys from gpg
+gpg --delete-secret-and-public-keys 
+
+```
+
+### mozilla sops - screts opertaions with PGP (pretty good privacy), GPG (GNU privacy guard) DEVELOPER
+
+```shell
+#go to repo of bx-game-app
+# import the public key
+gpg --import ./sops/sops-gpg.pub
+
+#install the sops
+brew install sops
+sops -v
+
+#encrypt the secret using sops
+sops --encrypt \
+--encrypted-regex '^(data|stringData)$' \
+--pgp 7F8E4700298D54FC \
+--in-place secret-mysql.yaml
+
+#reconcile the source
+flux reconcile source git flux-system
+#recocile the kustomization
+flux reconcile kustomization infra-database-kustomization-git-mysql
+
 ```

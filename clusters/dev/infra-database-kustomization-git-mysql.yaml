@@ -12,3 +12,7 @@ spec:
     kind: GitRepository
     name: infra-source-git
   targetNamespace: database
+  decryptions:
+    provider: sops
+    secretRef:
+      name: sops-gpg
