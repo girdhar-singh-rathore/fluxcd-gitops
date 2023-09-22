@@ -507,11 +507,44 @@ k -n flux-system get imagerepositories 8-demo-image-repository-bx-game-app -o ya
 #    - 7.8.1
 #    - 7.8.0
 
-#image automation controller will automatically update the deployment with latest image with image policy
+#image automation controller with image policy will resolve the image with policy
 
 #create image policy
 flux create image policy 8-demo-image-policy-bx-game-app \
   --image-ref=8-demo-image-repository-bx-game-app \
   --select-semver="7.8.x" \
   --export > 8-demo-image-policy-bx-game-app.yaml
+  
+#verify the image policy
+flux get image all
+
+[//]: # (fluxcd-gitops git:&#40;main&#41; flux get image all)
+
+[//]: # (NAME                                                    LAST SCAN                       SUSPENDED       READY   MESSAGE                       )
+
+[//]: # (imagerepository/8-demo-image-repository-bx-game-app     2023-09-22T08:53:36+02:00       False           True    successful scan: found 2 tags   )
+
+[//]: # ()
+[//]: # (NAME                                            LATEST IMAGE                            READY   MESSAGE                                                                  )
+
+[//]: # (imagepolicy/8-demo-image-policy-bx-game-app     docker.io/rathore78/dx-game-app:7.8.1   True    Latest image tag for 'docker.io/rathore78/dx-game-app' resolved to 7.8.1  )
+
+```
+
+### image automation controller update
+
+it will update the image in deployment
+
+```shell
+# create image update 
+flux create image update 8-demo-image-update-bx-game-app \
+  --git-repo-ref=8-demo-source-git-bx-game-app \
+  --checkout-branch=8-demo \
+  --author-name=fluxcdbot \
+  --author-email=rathore.girdharsingh@gmail.com \
+  --git-repo-path=manifests \
+  --push-branch=8-demo \
+  --interval=10s \
+  --export > 8-demo-image-update-automation-bx-game-app.yaml
+
 ```

@@ -1,0 +1,24 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: 8-demo-image-update-bx-game-app
+  namespace: flux-system
+spec:
+  git:
+    checkout:
+      ref:
+        branch: 8-demo
+    commit:
+      author:
+        email: rathore.girdharsingh@gmail.com
+        name: fluxcdbot
+    push:
+      branch: 8-demo
+  interval: 10s
+  sourceRef:
+    kind: GitRepository
+    name: 8-demo-source-git-bx-game-app
+  update:
+    path: manifests
+    strategy: Setters
