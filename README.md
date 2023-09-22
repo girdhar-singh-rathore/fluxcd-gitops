@@ -582,4 +582,23 @@ flux create source git 8-demo-source-git-bx-game-app \
   --secret-ref=8-demo-git-dx-game-app-auth \
   --export > 8-demo-source-git-bx-game-app.yaml 
   
+
+#reconcile the git source
+flux reconcile source git flux-system
+
+  
+```
+
+### bitnami sealed secrets
+
+```shell
+#create kustomization for sealed secrets
+flux create kustomization infra-security-kustomize-git-sealed-secrets \
+  --source=GitRepository/infra-source-git \
+  --prune=true \
+  --interval=1h \
+  --path=bitnami-sealed-secrets \
+  --export > infra-security-kustomize-git-sealed-secrets.yaml
+  
+  
 ```
