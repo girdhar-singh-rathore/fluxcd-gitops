@@ -1,0 +1,18 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: 10-demo-source-oci-dx-game-app
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  provider: generic
+  ref:
+    tag: 7.10.0-f0f5090
+  secretRef:
+    name: ghcr-secret
+  url: oci://ghcr.io/girdhar-singh-rathore/dx-game-app
+  verify:
+    provider: cosign
+    secretRef:
+      name: cosign-pub

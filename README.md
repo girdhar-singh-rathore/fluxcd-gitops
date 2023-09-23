@@ -734,3 +734,87 @@ flux reconcile source git flux-system
 flux reconcile kustomization infra-database-kustomization-git-mysql
 
 ```
+
+
+## cosign verification
+
+cosign: A tool for Container Signing, Verification and Storage in an OCI registry.
+
+
+```shell
+brew install cosign
+cosign version
+
+#generate key pair
+cosign generate-key-pair
+
+#create secrets for cosign to store the public key
+kubectl -n flux-system create secret generic cosign-pub \
+  --from-file=cosign.pub
+ 
+```
+
+
+### sign and verify the oci artifact using cosign
+
+```shell
+
+#go to repo of bx-game-app
+git checkout 10-demo
+
+#create the oci artifact and publish it to ghcr.io
+
+#login to ghcr.io
+docker login ghcr.io -u girdhar-singh-rathore
+
+
+flux push artifact oci://ghcr.io/girdhar-singh-rathore/dx-game-app:7.10.0-$(git rev-parse --short HEAD) \
+  --path=manifests \
+  --source="$(git config --get remote.origin.url)" \
+  --revision="7.10.0/$(git rev-parse --short HEAD)"
+  
+ # go to github repo and check the artifact is published 
+ 
+ #sign the artifact using cosign, use the sha256 instead of tag
+ 
+cosign sign -key cosign.key ghcr.io/girdhar-singh-rathore/dx-game-app@sha256:031db7d26174edba990eda99e11843592905be5234e96386bf4e0603c2343d5b
+
+# it will ask for the password for the private key which you have created earlier
+
+#verify the signature of the artifact on ghcr.io registry, it will show the signature .sig file
+#if you open the signature file, it will show you signed by the cosign
+
+#manullly verify the artifact using cosign public key
+cosign verify -key cosign.pub ghcr.io/girdhar-singh-rathore/dx-game-app@sha256:031db7d26174edba990eda99e11843592905be5234e96386bf4e0603c2343d5b
+
+```
+
+### verify the artifact while fetching from the oci repo, using cosign with image policy
+
+will use the flux oci component to fetch the artifact from ghcr.io
+
+```shell
+
+#create source to fetch artifact from ghcr.io oci
+flux create source oci 10-demo-source-oci-dx-game-app \
+  --url=oci://ghcr.io/girdhar-singh-rathore/dx-game-app \
+  --tag=7.10.0-f0f5090 \
+  --secret-ref=ghcr-secret \
+  --provider=generic \
+  --export > 10-demo-source-oci-dx-game-app.yaml
+
+#in order to verify the artifact, we need to add verify element in exported yaml file
+#verify:
+#  provider: cosign
+#  secretRef:
+#    name: cosign-pub
+
+#add kustomization to deploy the artifact
+flux create kustomization 10-demo-kustomization-oci-dx-game-app \
+  --source=OciRepository/10-demo-source-oci-dx-game-app \
+  --target-namespace=10-demo \
+  --interval=10s \
+  --prune=false \
+  --export > 10-demo-kustomization-oci-dx-game-app.yaml
+
+```
