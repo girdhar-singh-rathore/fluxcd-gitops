@@ -945,3 +945,23 @@ flux reconcile kustomization 2-demo-kustomization-bx-game-app
 flux get alert
 flux get alert-providers
 ```
+
+## flux monitoring and user interface
+
+### monitoring with prometheus and grafana
+
+```shell
+#create source git
+flux create source git monitoring-source-prometheus-stack \
+  --interval=30m \
+  --url=https://github.com/fluxcd/flux2 \
+  --branch=main \
+  --export > monitoring-source-prometheus-stack.yaml
+
+#create kustomization
+flux create kustomization monitoring-kustomization-prometheus-stack \
+  --interval=1h \
+  --source=monitoring-source-prometheus-stack \
+  --path="./manifests/monitoring/kube-prometheus-stack" \
+  --export > monitoring-kustomization-prometheus-stack.yaml
+```
