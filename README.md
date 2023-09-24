@@ -908,11 +908,10 @@ https://fluxcd.io/flux/components/notification/providers/
 #setup the slack workspace and channel
 #create slack app and add the slack app to workspace
 #token from slack app api
-xoxb-5934431717462-5926548865015-TGu1vG9ZpsDhrk5PPgWUObsV
 
 #create secret for slack token
 kubectl -n flux-system create secret generic slack-bot-token \
---from-literal=token=xoxb-5934431717462-5926548865015-TGu1vG9ZpsDhrk5PPgWUObsV
+--from-literal=token=
 
 #create slack provider
 flux create alert-provider notification-provider-slack \
@@ -940,6 +939,9 @@ flux create alert notification-alert-slack \
     --event-source "HelmChart/*" \
     --export > notification-alert-slack.yaml
     
-    
-    
+#reconcile the source
+flux reconcile source git flux-system
+flux reconcile kustomization 2-demo-kustomization-bx-game-app
+flux get alert
+flux get alert-providers
 ```
