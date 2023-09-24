@@ -948,7 +948,7 @@ flux get alert-providers
 
 ## flux monitoring and user interface
 
-### monitoring with prometheus and grafana
+### install prometheus and grafana
 
 ```shell
 #create source git
@@ -964,4 +964,35 @@ flux create kustomization monitoring-kustomization-prometheus-stack \
   --source=monitoring-source-prometheus-stack \
   --path="./manifests/monitoring/kube-prometheus-stack" \
   --export > monitoring-kustomization-prometheus-stack.yaml
+  
+#update the svc type to NodePort
+k -n monitoring edit svc kube-prometheus-stack-prometheus
+
+#update the svc type to NodePort
+k -n monitoring edit svc kube-prometheus-stack-grafana
+
+#access the prometheus and grafana in user interface
+k -n monitoring get svc
+https://localhost:31549/
+https://localhost:31793/
+
+#extract the grafana password
+kubectl get secret --namespace monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+```
+
+### configure prometheus to scrape the metrics from flux and visualize in grafana
+
+```shell
+
+#create kustomization 
+
+flux create kustomization monitoring-ocnfig \
+  --depends-on=monitoring-kustomization-prometheus-stack \
+  --interval=1h \
+  --prune=true \
+  --source=monitoring-source-prometheus-stack \
+  --path="./manifests/monitoring/monitoring-config" \
+  --export > monitoring-ocnfig.yaml
+
 ```

@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring-ocnfig
+  namespace: flux-system
+spec:
+  dependsOn:
+  - name: monitoring-kustomization-prometheus-stack
+  interval: 1h0m0s
+  path: ./manifests/monitoring/monitoring-config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: monitoring-source-prometheus-stack
