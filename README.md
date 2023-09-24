@@ -357,7 +357,7 @@ flux create kustomization infra-database-kustomization-git-mysql \
   --prune=true \
   --interval=10s \
   --target-namespace=database \
-  --export > infra-database-kustomization-git-mysql.yaml
+  --export > infra-database-kustomization-git-mysql.yaml_bkp
 
 #verify the kustomization
 flux get kustomizations
