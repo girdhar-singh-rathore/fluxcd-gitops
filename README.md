@@ -34,7 +34,7 @@ flux version
 ```
 
 
-## source-controller
+## source-controller and kustomize-controller
 
 ```shell
 flux get sources
@@ -91,7 +91,7 @@ http://localhost:30001/
 ```
 
 
-## kustomize-controller
+### kustomize-controller
 
 references: https://fluxcd.io/flux/components/kustomize/
 
@@ -107,14 +107,14 @@ git checkout 2-demo
 flux create source git 2-demo-source-git-bx-game-app \
   --url=https://github.com/girdhar-singh-rathore/dx-game-app \
     --branch=2-demo \
-    --timeout=10s \
+    --timeout=1m \
     --export 
     
 # create
 flux create source git 2-demo-source-git-bx-game-app \
   --url=https://github.com/girdhar-singh-rathore/dx-game-app \
     --branch=2-demo \
-    --timeout=10s
+    --timeout=1m
 
 #delete the source which was created above using imperative command
 flux delete source git 2-demo-source-git-bx-game-app
@@ -123,7 +123,7 @@ flux delete source git 2-demo-source-git-bx-game-app
 flux create source git 2-demo-source-git-bx-game-app \
   --url=https://github.com/girdhar-singh-rathore/dx-game-app \
     --branch=2-demo \
-    --timeout=10s \
+    --timeout=1m \
     --export > 2-demo-source-git-bx-game-app.yaml
 
 #to deploy above source, we need to create kustomization
@@ -236,6 +236,8 @@ kubectl get all -n 4-demo
 
 http://localhost:30275/
 ```
+
+## helm controller and OCI registry
 
 ### helm controller with git as source
 
@@ -589,6 +591,8 @@ flux reconcile source git flux-system
   
 ```
 
+## secret management and sign verifications
+
 ### bitnami sealed secrets
 
 ```shell
@@ -816,5 +820,44 @@ flux create kustomization 10-demo-kustomization-oci-dx-game-app \
   --interval=10s \
   --prune=false \
   --export > 10-demo-kustomization-oci-dx-game-app.yaml
+
+# reconcile the source
+flux reconcile source git flux-system
+# reconcile the kustomization
+flux reconcile kustomization 10-demo-kustomization-oci-dx-game-app
+```
+
+## notification controller
+
+```shell
+#webhook receiver
+#go to repo of bx-game-app
+git checkout 2-demo
+
+# git to github repo and create webhook receiver
+# bx-game-app -> settings -> webhooks -> add webhook
+
+#expose notification controller
+kubectl -n flux-system expose deployment notification-controller \
+  --name=receiver \
+  --type=NodePort \
+  --port=80 \
+  --target-port=9292 
+
+kubectl -n flux-system get svc
+
+#create secret for github webhook
+kubectl -n flux-system create secret generic github-webhook-secret \
+  --from-literal=token=secret-token-dont-share 
+
+#we need to put "secret-token-dont-share" secrets text in github webhook secret
+
+#create notification receiver object
+flux create receiver github-webhook-receiver \
+    --type=github \
+    --event=ping,push \
+    --secret-ref=github-webhook-secret \
+    --resource=GitRepository/2-demo-source-git-bx-game-app \
+    --export > github-webhook-receiver.yaml
 
 ```
