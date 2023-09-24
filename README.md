@@ -995,4 +995,120 @@ flux create kustomization monitoring-ocnfig \
   --path="./manifests/monitoring/monitoring-config" \
   --export > monitoring-ocnfig.yaml
 
+#reconcile the source
+flux reconcile source git flux-system 
+
+#verify the podmonitors
+k -n monitoring get podmonitors
+
+#install weave gitops
+
+# ref https://docs.gitops.weave.works/docs/open-source/getting-started/install-OSS/
+
+brew tap weaveworks/tap
+brew install weaveworks/tap/gitops
+
+gitops --version
+
+gitops create dashboard ww-gitops \
+  --password=pass
+  
+#access the gitops dashboard
+gitops dashboard
+k get svc -n flux-system
+#expose service as nodeport
+k -n flux-system edit svc ww-gitops-weave-gitops
+
+#access the gitops dashboard
+https://localhost:31281/
+```
+
+## flux uninstall
+
+```text
+flux uninstall --namespace=flux-system
+
+Are you sure you want to delete Flux and its custom resource definitions: y
+► deleting components in flux-system namespace
+✔ Deployment/flux-system/helm-controller deleted 
+✔ Deployment/flux-system/image-automation-controller deleted 
+✔ Deployment/flux-system/image-reflector-controller deleted 
+✔ Deployment/flux-system/kustomize-controller deleted 
+✔ Deployment/flux-system/notification-controller deleted 
+✔ Deployment/flux-system/source-controller deleted 
+✔ Service/flux-system/notification-controller deleted 
+✔ Service/flux-system/receiver deleted 
+✔ Service/flux-system/source-controller deleted 
+✔ Service/flux-system/webhook-receiver deleted 
+✔ NetworkPolicy/flux-system/allow-egress deleted 
+✔ NetworkPolicy/flux-system/allow-scraping deleted 
+✔ NetworkPolicy/flux-system/allow-webhooks deleted 
+✔ ServiceAccount/flux-system/helm-controller deleted 
+✔ ServiceAccount/flux-system/image-automation-controller deleted 
+✔ ServiceAccount/flux-system/image-reflector-controller deleted 
+✔ ServiceAccount/flux-system/kustomize-controller deleted 
+✔ ServiceAccount/flux-system/notification-controller deleted 
+✔ ServiceAccount/flux-system/source-controller deleted 
+✔ ClusterRole/crd-controller-flux-system deleted 
+✔ ClusterRole/flux-edit-flux-system deleted 
+✔ ClusterRole/flux-view-flux-system deleted 
+✔ ClusterRoleBinding/cluster-reconciler-flux-system deleted 
+✔ ClusterRoleBinding/crd-controller-flux-system deleted 
+► deleting toolkit.fluxcd.io finalizers in all namespaces
+✔ GitRepository/flux-system/2-demo-source-git-bx-game-app finalizers deleted 
+✔ GitRepository/flux-system/3-demo-source-git-bx-game-app finalizers deleted 
+✔ GitRepository/flux-system/5-demo-source-helm-git-bx-game-app finalizers deleted 
+✔ GitRepository/flux-system/8-demo-source-git-bx-game-app finalizers deleted 
+✔ GitRepository/flux-system/flux-system finalizers deleted 
+✔ GitRepository/flux-system/infra-source-git finalizers deleted 
+✔ GitRepository/flux-system/monitoring-source-prometheus-stack finalizers deleted 
+✔ OCIRepository/flux-system/10-demo-source-oci-dx-game-app finalizers deleted 
+✔ OCIRepository/flux-system/7-demo-infra-source-oci-dx-game-app-770 finalizers deleted 
+✔ HelmRepository/flux-system/6-demo-source-helm-repo-bx-game-app finalizers deleted 
+✔ HelmRepository/flux-system/sealed-secrets finalizers deleted 
+✔ HelmRepository/flux-system/ww-gitops finalizers deleted 
+✔ HelmRepository/monitoring/prometheus-community finalizers deleted 
+✔ HelmChart/flux-system/flux-system-5-demo-helmrelease-bx-game-app finalizers deleted 
+✔ HelmChart/flux-system/flux-system-6-demo-helmrelease-bx-game-app finalizers deleted 
+✔ HelmChart/flux-system/flux-system-sealed-secrets finalizers deleted 
+✔ HelmChart/flux-system/flux-system-ww-gitops finalizers deleted 
+✔ HelmChart/monitoring/monitoring-kube-prometheus-stack finalizers deleted 
+✔ Bucket/flux-system/4-demo-source-minio-s3-bucket-bx-game-app finalizers deleted 
+✔ Kustomization/flux-system/10-demo-kustomization-oci-dx-game-app finalizers deleted 
+✔ Kustomization/flux-system/2-demo-kustomization-bx-game-app finalizers deleted 
+✔ Kustomization/flux-system/3-demo-kustomization-bx-game-app finalizers deleted 
+✔ Kustomization/flux-system/4-demo-kustomization-minio-s3-bucket-bx-game-app finalizers deleted 
+✔ Kustomization/flux-system/7-demo-infra-kustomization-oci-dx-game-app-770 finalizers deleted 
+✔ Kustomization/flux-system/8-demo-kustomization-git-bx-game-app finalizers deleted 
+✔ Kustomization/flux-system/flux-system finalizers deleted 
+✔ Kustomization/flux-system/infra-security-kustomize-git-sealed-secrets finalizers deleted 
+✔ Kustomization/flux-system/monitoring-kustomization-prometheus-stack finalizers deleted 
+✔ Kustomization/flux-system/monitoring-ocnfig finalizers deleted 
+✔ HelmRelease/flux-system/5-demo-helmrelease-bx-game-app finalizers deleted 
+✔ HelmRelease/flux-system/6-demo-helmrelease-bx-game-app finalizers deleted 
+✔ HelmRelease/flux-system/sealed-secrets finalizers deleted 
+✔ HelmRelease/flux-system/ww-gitops finalizers deleted 
+✔ HelmRelease/monitoring/kube-prometheus-stack finalizers deleted 
+✔ Alert/flux-system/notification-alert-slack finalizers deleted 
+✔ Provider/flux-system/notification-provider-slack finalizers deleted 
+✔ Receiver/flux-system/github-webhook-receiver finalizers deleted 
+✔ ImagePolicy/flux-system/8-demo-image-policy-bx-game-app finalizers deleted 
+✔ ImageRepository/flux-system/8-demo-image-repository-bx-game-app finalizers deleted 
+✔ ImageUpdateAutomation/flux-system/8-demo-image-update-bx-game-app finalizers deleted 
+► deleting toolkit.fluxcd.io custom resource definitions
+✔ CustomResourceDefinition/alerts.notification.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/buckets.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/gitrepositories.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmcharts.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmrepositories.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imagepolicies.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imagerepositories.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imageupdateautomations.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/ocirepositories.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/providers.notification.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/receivers.notification.toolkit.fluxcd.io deleted 
+✔ Namespace/flux-system deleted 
+✔ uninstall finished
 ```
