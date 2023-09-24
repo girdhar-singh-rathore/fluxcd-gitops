@@ -840,9 +840,9 @@ git checkout 2-demo
 #expose notification controller
 kubectl -n flux-system expose deployment notification-controller \
   --name=receiver \
-  --type=NodePort \
   --port=80 \
-  --target-port=9292 
+  --target-port=9292 \
+  --type=NodePort \
 
 kubectl -n flux-system get svc
 
@@ -859,5 +859,87 @@ flux create receiver github-webhook-receiver \
     --secret-ref=github-webhook-secret \
     --resource=GitRepository/2-demo-source-git-bx-game-app \
     --export > github-webhook-receiver.yaml
+    
+#reconcile the source
+flux reconcile source git flux-system
+#reconcile the receiver
+flux reconcile receiver github-webhook-receiver
+#reconcile the kustomization
+flux reconcile kustomization 2-demo-kustomization-bx-game-app
+#verify the receiver
+flux get receiver github-webhook-receiver
 
+#NOTE: watch the source
+flux get sources git 2-demo-source-git-bx-game-app --watch
+
+#expose the nodeport to local tunnel so that github can send the webhook to notification controller via internet
+brew install localtunnel
+lt --port 3000 --subdomain girdhar-singh-rathore
+
+k get svc receiver -n flux-system
+#receiver   NodePort   10.109.13.202   <none>        80:32318/TCP   127m
+
+flux get receivers
+#NAME                    SUSPENDED       READY   MESSAGE                                                                                               
+#github-webhook-receiver False           True    Receiver initialized for path: /hook/ab09b3ac5436ef9fca17e74ddc7d57b24be7943a1e00ee34f45df11b3b73beda 
+lt --port 32318
+#your url is: https://early-coats-chew.loca.lt/hook/ab09b3ac5436ef9fca17e74ddc7d57b24be7943a1e00ee34f45df11b3b73beda  
+
+#get the path from receiver and url from localtunnel
+# git to github repo and create webhook receiver
+# bx-game-app -> settings -> webhooks -> add webhook
+
+
+#NOTE: watch the source
+flux get sources git 2-demo-source-git-bx-game-app --watch
+
+
+
+```
+
+### alert and provider
+
+https://fluxcd.io/flux/components/notification/
+
+send alert to slack channel using notification controller
+
+https://fluxcd.io/flux/components/notification/providers/
+```shell
+#setup the slack workspace and channel
+#create slack app and add the slack app to workspace
+#token from slack app api
+xoxb-5934431717462-5926548865015-TGu1vG9ZpsDhrk5PPgWUObsV
+
+#create secret for slack token
+kubectl -n flux-system create secret generic slack-bot-token \
+--from-literal=token=xoxb-5934431717462-5926548865015-TGu1vG9ZpsDhrk5PPgWUObsV
+
+#create slack provider
+flux create alert-provider notification-provider-slack \
+  --type=slack \
+  --channel=flux-alerts-channel \
+  --username=flux-bot \
+  --secret-ref=slack-bot-token \
+  --address=https://slack.com/api/chat.postMessage \
+  --export > notification-provider-slack.yaml
+  
+  
+ #filter the event using alert
+flux create alert notification-alert-slack \
+    --event-severity info \
+    --provider-ref notification-provider-slack \
+    --event-source "Kustomization/*" \
+    --event-source "HelmRelease/*" \
+    --event-source "GitRepository/*" \
+    --event-source "ImageRepository/*" \
+    --event-source "Bucket/*" \
+    --event-source "HelmRepository/*" \
+    --event-source "ImagePolicy/*" \
+    --event-source "ImageUpdateAutomation/*" \
+    --event-source "OCIRepository/*" \
+    --event-source "HelmChart/*" \
+    --export > notification-alert-slack.yaml
+    
+    
+    
 ```
